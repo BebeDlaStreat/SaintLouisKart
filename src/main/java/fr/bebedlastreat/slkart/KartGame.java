@@ -9,7 +9,7 @@ public class KartGame {
         JFrame window = new JFrame();
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setResizable(false);
-        window.setName("Saint-Louis Kart");
+        window.setName("Kart");
 
         GamePanel panel = new GamePanel();
         window.add(panel);

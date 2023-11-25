@@ -1,8 +1,14 @@
 package fr.bebedlastreat.slkart;
 
+import fr.bebedlastreat.slkart.entity.Player;
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.swing.*;
 import java.awt.*;
 
+@Getter
+@Setter
 public class GamePanel extends JPanel implements Runnable {
 
     private final int originalTileSize = 16;
@@ -15,8 +21,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     private final int fps = 60;
 
-    private final KeyHandler keyH = new KeyHandler();
+    private final KeyHandler keyHandler = new KeyHandler();
     private Thread gameThread;
+    private Player player = new Player(this, keyHandler);
 
     private int playerX = 100;
     private int playerY = 100;
@@ -26,7 +33,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.black);
         this.setDoubleBuffered(true);
-        this.addKeyListener(keyH);
+        this.addKeyListener(keyHandler);
         this.setFocusable(true);
     }
 
@@ -60,26 +67,14 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
-        if (keyH.isUpPressed()) {
-            playerY -= playerSpeed;
-        }
-        if (keyH.isDownPressed()) {
-            playerY += playerSpeed;
-        }
-        if (keyH.isLeftPressed()) {
-            playerX -= playerSpeed;
-        }
-        if (keyH.isRightPressed()) {
-            playerX += playerSpeed;
-        }
+        player.update();
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(Color.white);
-        g2.fillRect(playerX, playerY, tileSize, tileSize);
+        player.draw(g2);
         g2.dispose();
     }
 }
