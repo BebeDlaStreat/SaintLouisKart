@@ -1,16 +1,14 @@
-package fr.bebedlastreat.slkart;
+package fr.bebedlastreat.slkart.main;
 
 import fr.bebedlastreat.slkart.entity.Player;
 import fr.bebedlastreat.slkart.map.Circuit;
 import fr.bebedlastreat.slkart.sound.Sound;
-import fr.bebedlastreat.slkart.tools.ImageUtils;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 
 @Getter
 @Setter

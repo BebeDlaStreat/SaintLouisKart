@@ -1,6 +1,6 @@
 package fr.bebedlastreat.slkart.map;
 
-import fr.bebedlastreat.slkart.GamePanel;
+import fr.bebedlastreat.slkart.main.GamePanel;
 import fr.bebedlastreat.slkart.tools.ImageUtils;
 import lombok.Data;
 
@@ -8,7 +8,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Objects;
 
 @Data

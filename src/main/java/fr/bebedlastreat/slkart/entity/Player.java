@@ -1,7 +1,7 @@
 package fr.bebedlastreat.slkart.entity;
 
-import fr.bebedlastreat.slkart.GamePanel;
-import fr.bebedlastreat.slkart.KeyHandler;
+import fr.bebedlastreat.slkart.main.GamePanel;
+import fr.bebedlastreat.slkart.main.KeyHandler;
 import fr.bebedlastreat.slkart.map.CircuitTile;
 import fr.bebedlastreat.slkart.sound.Sound;
 import fr.bebedlastreat.slkart.tools.ImageUtils;
@@ -31,12 +31,14 @@ public class Player extends Entity {
     private double prevSpeed = 0;
 
     public Player(GamePanel panel, KeyHandler keyHandler) {
+        super(true);
         this.panel = panel;
         this.keyHandler = keyHandler;
 
         setDefaultValues();
         getPlayerImage();
         direction = "up";
+        solidArea = new Rectangle(panel.getTileSize()/4, panel.getTileSize()/4, panel.getTileSize()/2, panel.getTileSize()/2);
     }
 
     public double calculateAccel() {
@@ -84,11 +86,11 @@ public class Player extends Entity {
                 }
             }
             if (keyHandler.isLeftPressed()) {
-                rotation -= Math.PI/60;
+                rotation -= Math.PI/120;
                 speed -= speed/250;
             }
             if (keyHandler.isRightPressed()) {
-                rotation += Math.PI/60;
+                rotation += Math.PI/120;
                 speed -= speed/250;
             }
         }

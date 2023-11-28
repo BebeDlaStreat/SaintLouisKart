@@ -2,6 +2,7 @@ package fr.bebedlastreat.slkart.entity;
 
 import lombok.Data;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 @Data
@@ -13,6 +14,12 @@ public class Entity {
     public String direction;
     public int spriteCounter = 0;
     public int spriteNum = 1;
+    public Rectangle solidArea;
+    public boolean collision;
+
+    public Entity(boolean collision) {
+        this.collision = collision;
+    }
 
     public int getRoundX() {
         return (int) Math.round(x);

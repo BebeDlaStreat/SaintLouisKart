@@ -1,10 +1,9 @@
 package fr.bebedlastreat.slkart.tile;
 
-import fr.bebedlastreat.slkart.GamePanel;
+import fr.bebedlastreat.slkart.main.GamePanel;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

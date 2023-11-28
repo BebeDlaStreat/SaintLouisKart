@@ -1,4 +1,4 @@
-package fr.bebedlastreat.slkart;
+package fr.bebedlastreat.slkart.main;
 
 import lombok.Getter;
 
