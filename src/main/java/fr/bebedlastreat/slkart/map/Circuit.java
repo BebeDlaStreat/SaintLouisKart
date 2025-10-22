@@ -1,6 +1,7 @@
 package fr.bebedlastreat.slkart.map;
 
-import fr.bebedlastreat.slkart.main.GamePanel;
+import fr.bebedlastreat.slkart.entity.Location;
+import fr.bebedlastreat.slkart.panel.GamePanel;
 import fr.bebedlastreat.slkart.tools.ImageUtils;
 import lombok.Data;
 
@@ -18,14 +19,14 @@ public class Circuit {
     private final int height;
     private final CircuitTile[][] tiles;
     private final BufferedImage tileImg;
-    private final GamePanel panel;
     private final float sizeMultiplier;
     private final int speedReducer;
+    private final Location[] spawns;
 
-    public Circuit(String path, String tilePath, GamePanel panel, float sizeMultiplier, int speedReducer) {
-        this.panel = panel;
+    public Circuit(String path, String tilePath, float sizeMultiplier, int speedReducer, Location[] spawns) {
         this.sizeMultiplier = sizeMultiplier;
         this.speedReducer = speedReducer;
+        this.spawns = spawns;
         BufferedImage img;
         BufferedImage imgTile;
         try {
@@ -53,6 +54,11 @@ public class Circuit {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 tiles[y][x] = CircuitTile.getByColor(new Color(tileImg.getRGB(x, y)));
+                if (tileImg.getRGB(x, y) == CircuitTile.ROAD.getColor().getRGB() || tileImg.getRGB(x, y) == CircuitTile.SPEED.getColor().getRGB()) {
+                    tileImg.setRGB(x, y, Color.WHITE.getRGB());
+                } else {
+                    tileImg.setRGB(x, y, new Color(0, 0, 0, 0).getRGB());
+                }
             }
         }
     }

@@ -1,12 +1,15 @@
 package fr.bebedlastreat.slkart.entity;
 
-import fr.bebedlastreat.slkart.main.GamePanel;
+import fr.bebedlastreat.slkart.collision.CollisionResult;
+import fr.bebedlastreat.slkart.panel.GamePanel;
 import fr.bebedlastreat.slkart.main.KeyHandler;
+import fr.bebedlastreat.slkart.map.Circuit;
 import fr.bebedlastreat.slkart.map.CircuitTile;
-import fr.bebedlastreat.slkart.sound.Sound;
+import fr.bebedlastreat.slkart.content.SoundOld;
 import fr.bebedlastreat.slkart.tools.ImageUtils;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexUtils;
 
@@ -16,29 +19,37 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 @EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
 public class Player extends Entity {
 
     private GamePanel panel;
     private KeyHandler keyHandler;
 
-    private double rotation = -Math.PI/2;
     private double speed = 0;
     private final double maxSpeed = 1000;
     private final double maxAcceleration = 10;
     private BufferedImage kart;
-    private CircuitTile prevTile = CircuitTile.ROAD;
+    private int prevCollision;
     private double prevSpeed = 0;
 
     public Player(GamePanel panel, KeyHandler keyHandler) {
-        super(true);
+        super(panel, true);
         this.panel = panel;
         this.keyHandler = keyHandler;
 
-        setDefaultValues();
+        solidArea = new Rectangle(panel.getTileSize()/3, panel.getTileSize()/3, panel.getTileSize()/3, panel.getTileSize()/3);
         getPlayerImage();
-        direction = "up";
-        solidArea = new Rectangle(panel.getTileSize()/4, panel.getTileSize()/4, panel.getTileSize()/2, panel.getTileSize()/2);
+    }
+
+
+
+    public void getPlayerImage() {
+        try {
+            kart = ImageIO.read(getClass().getResourceAsStream("/player/new_kart.png"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public double calculateAccel() {
@@ -49,29 +60,9 @@ public class Player extends Entity {
         return (maxAcceleration/3) - Math.pow(-speed/(maxSpeed/3), 2)*(maxAcceleration/3);
     }
 
-    public void setDefaultValues() {
-        setX(0);
-        setY(0);
-    }
-
-    public void getPlayerImage() {
-        try {
-            up1 = ImageIO.read(getClass().getResourceAsStream("/player/boy_up_1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/player/boy_up_2.png"));
-            down1 = ImageIO.read(getClass().getResourceAsStream("/player/boy_down_1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/player/boy_down_2.png"));
-            left1 = ImageIO.read(getClass().getResourceAsStream("/player/boy_left_1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/player/boy_left_2.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/player/boy_right_1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/player/boy_right_2.png"));
-            kart = ImageIO.read(getClass().getResourceAsStream("/player/kart.png"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
     public void update() {
-        CircuitTile tile = panel.getCircuit().getTile(getRoundX(), getRoundY());
+        //CircuitTile tile = circuit.getTile(getRoundX(), getRoundY());
+        int collision = panel.getCollisionChecker().checkEntity(this);
         if (keyHandler.isUpPressed() || keyHandler.isDownPressed() || keyHandler.isLeftPressed() || keyHandler.isRightPressed()) {
             if (keyHandler.isUpPressed()) {
                 if (speed < maxSpeed) {
@@ -86,38 +77,33 @@ public class Player extends Entity {
                 }
             }
             if (keyHandler.isLeftPressed()) {
-                rotation -= Math.PI/120;
+                location.rotate(-Math.PI/120);
                 speed -= speed/250;
             }
             if (keyHandler.isRightPressed()) {
-                rotation += Math.PI/120;
+                location.rotate(Math.PI/120);
                 speed -= speed/250;
             }
         }
         if (!getKeyHandler().isUpPressed() && !keyHandler.isDownPressed()){
-            if (speed > 0) {
-                speed = Math.max(0, speed - 1);
-            } else if (speed < 0) {
-                speed = Math.min(0, speed + 1);
+            speed *= 0.98;
+            if (Math.abs(speed) < 5) {
+                speed = 0;
             }
         }
-        if (tile == CircuitTile.SPEED) {
-            if (prevTile != CircuitTile.SPEED) {
-                panel.playSound(Sound.SPEED);
+        if (CollisionResult.SPEED.fail(collision)) {
+            if (!CollisionResult.SPEED.fail(prevCollision)) {
+                panel.playSound(SoundOld.SPEED);
             }
-            speed = Math.min(speed + 10, maxSpeed*1.5);
+            speed = Math.min(speed + 50, maxSpeed*1.5);
         }
-        if (tile == CircuitTile.SLOW) {
-            if (prevTile != CircuitTile.SLOW) {
-                panel.playSound(Sound.SLOW);
+        if (CollisionResult.SLOW.fail(collision)) {
+            if (!CollisionResult.SLOW.fail(prevCollision)) {
+                panel.playSound(SoundOld.SLOW);
             }
-            if (speed > 0) {
-                speed = Math.max(0, speed-speed/100);
-            } else if (speed < 0) {
-                speed = Math.min(0, speed-speed/100);
-            }
+            speed *= 0.98;
         }
-        if (tile == CircuitTile.ROAD) {
+        if (CollisionResult.ROAD.fail(collision)) {
             if (speed > maxSpeed) {
                 speed = Math.max(0, speed - 3);
             }
@@ -125,43 +111,35 @@ public class Player extends Entity {
                 speed = Math.max(0, speed + 3);
             }
         }
+        if (keyHandler.isSpacePressed()) {
+            speed = Math.min(speed + 50, maxSpeed*1.5);
+        }
         if (speed != 0) {
-            Complex pos = new Complex(x, y);
-            Complex move = ComplexUtils.polar2Complex(Math.abs(speed/panel.getCircuit().getSpeedReducer()), speed > 0 ? rotation : rotation + Math.PI);
+            Complex pos = new Complex(getX(), getY());
+            Complex move = ComplexUtils.polar2Complex(Math.abs(speed/circuit.getSpeedReducer()), speed > 0 ? getRotation() : getRotation() + Math.PI);
             pos = pos.add(move);
-            double prevX = x;
-            double prevY = y;
-            x = pos.getReal();
-            y = pos.getImaginary();
-            x = Math.max(0, x);
-            y = Math.max(0, y);
-            x = Math.min(x, panel.getCircuit().getWidth());
-            y = Math.min(y, panel.getCircuit().getHeight());
-            if (panel.getCircuit().getTile(getRoundX(), getRoundY()) == CircuitTile.WALL) {
+            double prevX = getX();
+            double prevY = getY();
+            setX(pos.getReal());
+            setY(pos.getImaginary());
+            setX(Math.max(0, getX()));
+            setY(Math.max(0, getY()));
+            setX(Math.min(getX(), circuit.getWidth()));
+            setY(Math.min(getY(), circuit.getHeight()));
+            if (CollisionResult.WALL.fail(panel.getCollisionChecker().checkEntity(this))) {
                 if (Math.abs(prevSpeed) > maxSpeed/4) {
-                    panel.playSound(Sound.BLOCK);
+                    panel.playSound(SoundOld.BLOCK);
                 }
-                x = prevX;
-                y = prevY;
+                setX(prevX);
+                setY(prevY);
                 speed = 0;
             }
         }
-        prevTile = tile;
+        prevCollision = collision;
         prevSpeed = speed;
     }
 
     public void draw(Graphics2D g2) {
-        g2.setColor(Color.white);
-        g2.drawString(String.valueOf(speed/maxSpeed * 100), 10, 20);
-        g2.drawString(String.valueOf(Math.round(x)), 10, 30);
-        g2.drawString(String.valueOf(Math.round(y)), 10, 40);
-        Graphics2D kartGraph = kart.createGraphics();
-        //kartGraph.rotate(-Math.PI/2 + rotation);
-
-        //g2.drawImage(kartGraph.getDeviceConfiguration().createCompatibleImage(panel.getOriginalTileSize(), panel.getOriginalTileSize()),
-        //        (int) (Math.round(x)-panel.getOriginalTileSize()/2), (int) Math.round(y)-panel.getOriginalTileSize()/2, panel.getOriginalTileSize(), panel.getOriginalTileSize(), null);
-        g2.drawImage(ImageUtils.rotate(kart, 0),  panel.getScreenWidth()/2 - panel.getOriginalTileSize()/2, panel.getScreenHeight()/2-panel.getOriginalTileSize()/2, panel.getOriginalTileSize(), panel.getOriginalTileSize(), null);
-        //kartGraph.dispose();
-        //g2.fillRect((int) Math.round(x-5), (int) Math.round(y-5), 11, 11);
+        g2.drawImage(ImageUtils.rotate(kart, getRotation() + Math.PI/2),  panel.getWidth()/2 - panel.getTileSize()/2, panel.getHeight()/2-panel.getTileSize()/2, panel.getTileSize(), panel.getTileSize(), null);
     }
 }
